@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://sharkimtraders.co.ke/</loc>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://sharkimtraders.co.ke/index.html</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://sharkimtraders.co.ke/shop.html</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://sharkimtraders.co.ke/about.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+  </url>
+  <url>
+    <loc>https://sharkimtraders.co.ke/contact.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+  </url>
+  <url>
+    <loc>https://sharkimtraders.co.ke/faq.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://sharkimtraders.co.ke/return-policy.html</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  <!-- Note: product.html is a template URL. Individual products are accessible via query param id, which search engines may not enumerate from sitemap. Use Merchant Center feed below for product ingestion. -->
+  <url>
+    <loc>https://sharkimtraders.co.ke/product.html</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.2</priority>
+  </url>
+</urlset>

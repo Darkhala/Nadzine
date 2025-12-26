@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss xmlns:g="http://base.google.com/ns/1.0" version="2.0">
+  <channel>
+    <title>Sharkim Traders Product Feed</title>
+    <link>https://sharkimtraders.co.ke/</link>
+    <description>Live products for Google Merchant Center</description>
+    <!-- Example item. Add real products via CMS or update script to regenerate this XML. -->
+    <item>
+      <g:id>SAMPLE-1</g:id>
+      <title>Sample Product</title>
+      <description>Sample item. Replace with real inventory pulled from Supabase.</description>
+      <link>https://sharkimtraders.co.ke/product.html?id=1</link>
+      <g:image_link>https://sharkimtraders.co.ke/images/sharkim_gold_logo.png</g:image_link>
+      <g:availability>in stock</g:availability>
+      <g:condition>new</g:condition>
+      <g:price>1000.00 KES</g:price>
+      <g:brand>Sharkim Traders</g:brand>
+      <g:google_product_category>Electronics</g:google_product_category>
+      <g:shipping>
+        <g:country>KE</g:country>
+        <g:price>0.00 KES</g:price>
+      </g:shipping>
+    </item>
+  </channel>
+</rss>

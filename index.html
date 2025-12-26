@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nadzine Emporium</title>
+  <link rel="icon" type="image/png" href="/images/icon logo.png" />
+  <meta name="description" content="Nadzine Emporium — Elegance in every drop. Premium fragrances, beauty and lifestyle essentials. WhatsApp: 0101338152." />
+  <link rel="canonical" href="/index.html" />
+
+  <!-- Open Graph / Twitter -->
+  <meta property="og:title" content="Nadzine Emporium" />
+  <meta property="og:description" content="Elegance in every drop. Explore premium fragrances and lifestyle picks." />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="/images/icon logo.png" />
+  <meta property="og:url" content="/index.html" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Nadzine Emporium" />
+  <meta name="twitter:description" content="Elegance in every drop. Premium fragrances and beauty." />
+  <meta name="twitter:image" content="/images/icon logo.png" />
+
+  <!-- Structured Data: Organization -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Nadzine Emporium",
+    "url": "/index.html",
+    "logo": "/images/icon logo.png",
+    "sameAs": [],
+    "contactPoint": [{
+      "@type": "ContactPoint",
+      "telephone": "0101338152",
+      "contactType": "customer service",
+      "areaServed": "KE"
+    }]
+  }
+  </script>
+
+  <!-- TailwindCSS + Supabase -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/@supabase/supabase-js"></script>
+
+  <style>
+    :root { --gold: #D4AF37; }
+    body { font-family: "Times New Roman", Times, serif, Arial, Helvetica, sans-serif; }
+    .brand-gold { color: var(--gold); }
+    .brand-gold-bg { background-color: var(--gold); }
+    header a, header li, header h1, header h2, header p { color: #ffffff !important; }
+    header a:hover { color: #ffffff !important; text-decoration: underline; }
+    #discount-badge, .discount-badge { background: transparent !important; color: #dc2626 !important; padding: 0 !important; border-radius: 0 !important; }
+  </style>
+</head>
+<body class="bg-gray-100">
+
+<!-- TOP CONTACT BAR -->
+<div class="w-full bg-black text-gray-200 text-xs">
+  <div class="max-w-7xl mx-auto px-3 py-2 flex items-center justify-between">
+    <div></div>
+    <div class="flex items-center gap-4">
+      <a href="https://wa.me/0101338152" class="flex items-center gap-1" style="color:#ffffff !important;">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 32 32" fill="currentColor"><path d="M16 .5C7.6.5.5 7.6.5 16c0 2.8.7 5.5 2.2 7.9L0 32l8.3-2.7c2.3 1.3 5 2 7.7 2 8.4 0 15.5-7.1 15.5-15.5S24.4.5 16 .5zM16 29c-2.4 0-4.8-.6-6.9-1.8l-.5-.3-4.9 1.6 1.6-4.8-.3-.5C3.6 21 3 18.6 3 16 3 9.4 9.4 3 16 3s13 6.4 13 13-6.4 13-13 13zm7.3-9.8c-.4-.2-2.3-1.1-2.6-1.2s-.6-.2-.8.2c-.2.4-1 1.2-1.2 1.4s-.4.3-.8.1c-.4-.2-1.6-.6-3-2-1.1-1.1-1.9-2.3-2.1-2.7s0-.6.2-.8.4-.4.6-.6c.2-.2.3-.4.4-.6.1-.2 0-.5 0-.7s-.8-2-1.1-2.8c-.3-.8-.6-.7-.8-.7h-.7c-.2 0-.7.1-1.1.5s-1.4 1.4-1.4 3.4 1.4 3.9 1.6 4.1c.2.2 2.7 4.2 6.5 5.9.9.4 1.7.7 2.2.9.9.3 1.6.3 2.2.2.7-.1 2.3-1 2.6-1.9.3-.9.3-1.7.2-1.9-.1-.2-.3-.3-.7-.5z"/></svg>
+        0101338152
+      </a>
+      <a href="mailto:nadzineemporium@gmail.com" style="color:#ffffff !important;">nadzineemporium@gmail.com</a>
+    </div>
+  </div>
+</div>
+
+<!-- HEADER -->
+<header class="bg-black text-white py-5">
+  <div class="max-w-7xl mx-auto px-3">
+    <div class="flex flex-col items-start">
+      <img src="images/icon logo.png" alt="Nadzine Emporium" class="h-20" />
+      <div class="text-xs brand-gold mt-1">Elegance in every drop</div>
+    </div>
+
+    <div class="mt-4 w-full flex flex-wrap items-center gap-2">
+      <input type="text" id="searchInput" placeholder="Search products..." class="min-w-0 flex-1 px-4 py-2 text-black border rounded focus:outline-none">
+      <button id="searchBtn" class="px-4 py-2 bg-rose-600 text-white rounded hover:bg-rose-700">Search</button>
+      <button id="cartBtn" class="ml-auto flex items-center gap-2 px-3 py-2 brand-gold-bg text-black rounded hover:opacity-90">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4h-2l-1 2H1v2h2l3.6 7.6-1.4 2.4c-.2.3-.2.8 0 1.2.2.4.6.6 1 .6h12v-2H7.4c-.1 0-.2 0-.2-.1l.9-1.5h7.9c.4 0 .7-.2.9-.5l3.6-6.5c.2-.4.1-.8 0-1.1-.2-.3-.5-.5-.9-.5H6.2L5.3 4H7zm0 16c-1.1 0-2 .9-2 2s.9 2 2 2c1.2 0 2-.9 2-2s-.8-2-2-2zm10 0c-1.1 0-2 .9-2 2s.9 2 2 2c1.2 0 2-.9 2-2s-.9-2-2-2z"/></svg>
+        Cart
+        <span id="cartCount" class="bg-yellow-400 text-black text-xs font-bold px-2 py-0.5 rounded-full">0</span>
+      </button>
+    </div>
+
+    <nav class="mt-3">
+      <ul class="flex flex-wrap justify-center gap-4 md:gap-6 text-sm">
+        <li><a href="index.html" class="hover:text-yellow-400">Home</a></li>
+        <li><a href="shop.html" class="hover:text-yellow-400">Shop</a></li>
+        <li><a href="about.html" class="hover:text-yellow-400">About</a></li>
+        <li><a href="faq.html" class="hover:text-yellow-400">FAQ</a></li>
+        <li><a href="contact.html" class="hover:text-yellow-400">Contact</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<!-- HERO + CATEGORIES -->
+<section class="w-full py-4 bg-white">
+  <div class="max-w-7xl mx-auto px-3 grid grid-cols-1 md:grid-cols-12 gap-4">
+    <aside class="hidden md:block md:col-span-3 bg-white rounded shadow p-3 h-fit">
+      <h3 class="font-semibold mb-2">Shop Categories</h3>
+      <ul id="leftCatList" class="space-y-1 text-sm"></ul>
+    </aside>
+    <div class="md:hidden">
+      <button id="mobileCatToggle" class="w-full flex items-center justify-between px-3 py-2 bg-white rounded shadow">
+        <span class="font-semibold">Shop by Categories</span>
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M7 10l5 5 5-5z"/></svg>
+      </button>
+      <div id="mobileCatPanel" class="mt-2 bg-white rounded shadow p-3 hidden">
+        <ul id="mobileCatList" class="space-y-1 text-sm"></ul>
+      </div>
+    </div>
+    <div class="md:col-span-9 relative rounded overflow-hidden bg-white">
+      <img src="/images/Banner.png" class="w-full h-64 md:h-72 object-cover block" alt="Nadzine Emporium banner" data-no-zoom>
+      <div class="absolute inset-0 bg-black/40"></div>
+      <div class="absolute inset-0 flex flex-col items-start justify-center p-4 md:p-6" style="color:#ffffff !important;">
+        <h2 class="text-2xl md:text-3xl font-bold drop-shadow" style="color:#ffffff !important; text-shadow: 0 1px 2px rgba(0,0,0,0.35);">Elegance in every drop</h2>
+        <p style="color:#ffffff !important;">Discover premium fragrances & beauty essentials</p>
+        <a href="shop.html" class="mt-3 inline-block px-5 py-2 bg-rose-600 text-white rounded hover:bg-rose-700">Shop Now</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MAIN SECTIONS -->
+<main class="max-w-7xl mx-auto px-3 py-6 space-y-12" id="mainContent"></main>
+
+<!-- Email Overlay -->
+<div id="emailOverlay" class="hidden fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+  <div class="bg-white p-6 rounded-lg w-96 shadow-lg">
+    <h2 class="text-lg font-bold mb-4">Send Email Inquiry</h2>
+    <form id="emailForm" class="space-y-3">
+      <input type="hidden" id="productInfo">
+      <div>
+        <label class="block text-sm">Name:</label>
+        <input type="text" id="name" class="w-full border px-3 py-2 rounded" required>
+      </div>
+      <div>
+        <label class="block text-sm">Phone Number:</label>
+        <input type="text" id="phone" class="w-full border px-3 py-2 rounded" required>
+      </div>
+      <div>
+        <label class="block text-sm">Location:</label>
+        <input type="text" id="location" class="w-full border px-3 py-2 rounded" required>
+      </div>
+      <div>
+        <label class="block text-sm">Message:</label>
+        <textarea id="message" class="w-full border px-3 py-2 rounded" rows="4" readonly></textarea>
+      </div>
+      <div class="flex justify-between mt-4">
+        <button type="button" id="cancelEmail" class="px-4 py-2 bg-gray-400 text-white rounded">Cancel</button>
+        <button type="submit" class="px-4 py-2 bg-rose-600 text-white rounded">Send</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Footer -->
+<footer class="bg-black text-gray-200 mt-10">
+  <div class="max-w-7xl mx-auto px-6 py-10 grid grid-cols-1 md:grid-cols-4 gap-8">
+    <div>
+      <img src="images/icon logo.png" alt="Company Logo" class="h-14 mb-4">
+      <p class="mb-2">WhatsApp: <a href="https://wa.me/0101338152" class="text-[var(--gold)] font-medium">0101338152</a></p>
+      <p class="mb-2">Call: <a href="tel:0101338152" class="text-white font-medium">0101338152</a></p>
+      <p class="mb-2">Email: <a href="mailto:nadzineemporium@gmail.com" class="text-[var(--gold)] font-medium">nadzineemporium@gmail.com</a></p>
+      <p class="text-sm text-gray-400">Time: 8:30AM - 6:30PM</p>
+    </div>
+    <div>
+      <h3 class="text-lg font-semibold mb-3 text-white">Quick Links</h3>
+      <ul class="space-y-2">
+        <li><a href="index.html" class="hover:text-[var(--gold)]">Home</a></li>
+        <li><a href="shop.html" class="hover:text-[var(--gold)]">Shop</a></li>
+        <li><a href="about.html" class="hover:text-[var(--gold)]">About Us</a></li>
+        <li><a href="faq.html" class="hover:text-[var(--gold)]">FAQ</a></li>
+        <li><a href="contact.html" class="hover:text-[var(--gold)]">Contact</a></li>
+      </ul>
+    </div>
+    <div>
+      <h3 class="text-lg font-semibold mb-3 text-white">Working Hours</h3>
+      <p class="mb-1">Monday - Saturday: <span class="font-medium">08:30 - 18:30</span></p>
+      <p class="mb-1">Sunday: <span class="text-rose-500">Closed</span></p>
+    </div>
+    <div>
+      <h3 class="text-lg font-semibold mb-3 text-white">Payments</h3>
+      <div class="flex space-x-3">
+        <img src="/images/mpesa1.png" alt="MPESA" class="h-6">
+        <img src="/images/im-bank.png" alt="I&M Bank" class="h-6">
+        <img src="/images/equity.png" alt="Equity Bank" class="h-6">
+      </div>
+    </div>
+  </div>
+  <div class="bg-black text-[var(--gold)] text-center py-3 mt-6">
+    <p class="text-sm">&copy; 2025 Nadzine Emporium. All rights reserved.</p>
+  </div>
+</footer>
+
+<script src="js/categories.js"></script>
+<script src="js/home.js"></script>
+<script src="js/theme.js"></script>
+</body>
+</html>

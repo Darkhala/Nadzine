@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Manage Products - Sharkim Traders</title>
+  <link rel="icon" type="image/png" href="/images/icon logo.png" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/@supabase/supabase-js"></script>
+  <link rel="preload" href="js/categories.js" as="script">
+  <script src="js/categories.js" defer></script>
+  <style>
+    body { font-family: "Times New Roman", Times, serif, Arial, Helvetica, sans-serif; }
+    .hidden { display: none !important; }
+    .flex { display: flex !important; }
+  </style>
+</head>
+<body class="bg-gray-100 p-6">
+  <div class="max-w-7xl mx-auto bg-white p-6 rounded shadow">
+    <div class="flex items-center justify-between mb-6">
+      <h2 class="text-2xl font-bold">Manage Products</h2>
+      <div class="flex items-center gap-3">
+        <span id="userEmail" class="text-sm text-gray-600"></span>
+        <button id="logoutBtn" class="bg-gray-800 hover:bg-black text-white px-3 py-2 rounded">Logout</button>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="mb-4 grid grid-cols-1 md:grid-cols-12 gap-2">
+      <div class="md:col-span-6 flex gap-2">
+        <input id="searchInput" type="text" placeholder="Search by product title..." class="w-full px-4 py-2 border rounded" />
+        <button id="searchBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">Search</button>
+      </div>
+      <div class="md:col-span-3">
+        <select id="categorySelect" class="w-full px-3 py-2 border rounded">
+          <option value="">All Categories</option>
+        </select>
+      </div>
+      <div class="md:col-span-3">
+        <select id="subcategorySelect" class="w-full px-3 py-2 border rounded" disabled>
+          <option value="">All Subcategories</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="mb-4">
+      <button id="resetBtn" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded">Reset</button>
+    </div>
+
+    <!-- Products Grid -->
+    <div id="productsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-black/30 backdrop-blur-sm hidden items-center justify-center z-40">
+      <div class="flex items-center gap-3 bg-white px-4 py-3 rounded shadow">
+        <svg class="animate-spin h-5 w-5 text-gray-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+        </svg>
+        <span id="loadingText" class="text-gray-700">Loading...</span>
+      </div>
+    </div>
+
+    <p id="status" class="mt-4 text-sm text-gray-700"></p>
+  </div>
+
+<!-- Edit Modal -->
+<div id="editModal" class="fixed inset-0 bg-black/50 hidden z-50 flex justify-center overflow-y-auto">
+  <div class="bg-white w-full max-w-2xl rounded shadow p-6 mt-10 mb-10 overflow-y-auto max-h-[90vh]">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-xl font-semibold">Edit Product</h3>
+      <button id="closeEditModal" class="text-gray-500 hover:text-black">x</button>
+    </div>
+
+    <form id="editForm" class="space-y-4">
+      <!-- Title -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Title</label>
+        <input id="editTitle" type="text" class="w-full px-3 py-2 border rounded" required />
+      </div>
+
+      <!-- Prices -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div>
+          <label class="block text-sm font-medium text-gray-700">New Price (Ksh)</label>
+          <input id="editPrice" type="number" step="0.01" class="w-full px-3 py-2 border rounded" required />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Original Price (Ksh)</label>
+          <input id="editOriginalPrice" type="number" step="0.01" class="w-full px-3 py-2 border rounded" required />
+        </div>
+      </div>
+
+      <!-- Main/Sub Category -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Main Category</label>
+        <select id="editCategory" class="w-full px-3 py-2 border rounded" required></select>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Subcategory</label>
+        <select id="editSubcategory" class="w-full px-3 py-2 border rounded"></select>
+      </div>
+
+      <!-- Brand -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Brand</label>
+        <input id="editBrand" type="text" class="w-full px-3 py-2 border rounded" />
+      </div>
+
+      <!-- Description -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Description</label>
+        <textarea id="editDescription" class="w-full px-3 py-2 border rounded h-28" placeholder="Product Description"></textarea>
+      </div>
+
+      <!-- Variants editor -->
+      <div class="border rounded p-3">
+        <div class="flex items-center justify-between mb-2">
+          <label class="block text-sm font-medium text-gray-700">Size/Price Variants</label>
+          <button type="button" id="editAddVariant" class="text-xs bg-gray-800 text-white px-2 py-1 rounded">Add Variant</button>
+        </div>
+        <div id="editVariantsWrap" class="space-y-2"></div>
+      </div>
+
+      <!-- Image Replace -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Product Images (you can select multiple)</label>
+        <div class="flex items-center gap-3 mb-2">
+          <img id="editImagePreview" src="" alt="Preview" class="h-20 w-20 object-cover rounded border" />
+          <span class="text-xs text-gray-500">Select multiple to add more images. Use the preview list below to set primary or remove before saving.</span>
+        </div>
+        <input id="editImage" type="file" accept="image/*" multiple class="w-full px-3 py-2 border rounded" />
+        <div id="editPreview" class="mt-3 flex flex-wrap gap-3"></div>
+      </div>
+
+      <!-- Buttons -->
+      <div class="pt-2 flex justify-end gap-2">
+        <button type="button" id="cancelEdit" class="px-4 py-2 border rounded">Cancel</button>
+        <button id="saveBtn" type="submit" class="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded">Save</button>
+      </div>
+    </form>
+
+    <p id="editStatus" class="mt-2 text-sm"></p>
+  </div>
+</div>
+
+
+  <script>
+    const supabaseUrl = 'https://hhbhkzfoemfowxftgktb.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhoYmhremZvZW1mb3d4ZnRna3RiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY2NTMyNzQsImV4cCI6MjA4MjIyOTI3NH0.6DeVz_OR0l6FECAqG7x52fU-nCaFazcklUU6jfg5-RE';
+    const client = window.supabase.createClient(supabaseUrl, supabaseKey);
+    const ADMIN_EMAIL = 'halahalahamish@gmail.com';
+
+    // Auth guard
+    async function ensureAuth() {
+      try {
+        const { data: { session } } = await client.auth.getSession();
+        if (!session) { window.location.href = 'login.html'; return false; }
+        const userEmail = session.user?.email || '';
+        document.getElementById('userEmail').textContent = userEmail;
+        if (userEmail.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
+          await client.auth.signOut();
+          window.location.href = 'login.html';
+          return false;
+        }
+        client.auth.onAuthStateChange((event) => { if (event === 'SIGNED_OUT') window.location.href = 'login.html'; });
+        return true;
+      } catch { window.location.href = 'login.html'; return false; }
+    }
+
+    const statusText = document.getElementById('status');
+    const productsGrid = document.getElementById('productsGrid');
+    const searchInput = document.getElementById('searchInput');
+    const searchBtn = document.getElementById('searchBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const categorySelect = document.getElementById('categorySelect');
+    const subcategorySelect = document.getElementById('subcategorySelect');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    const loadingText = document.getElementById('loadingText');
+
+    // Edit modal elements
+    const editModal = document.getElementById('editModal');
+    const closeEditModalBtn = document.getElementById('closeEditModal');
+    const cancelEditBtn = document.getElementById('cancelEdit');
+    const editForm = document.getElementById('editForm');
+    const editTitle = document.getElementById('editTitle');
+    const editPrice = document.getElementById('editPrice');
+    const editOriginalPrice = document.getElementById('editOriginalPrice');
+    const editCategory = document.getElementById('editCategory');
+    const editSubcategory = document.getElementById('editSubcategory');
+    const editBrand = document.getElementById('editBrand');
+    const editDescription = document.getElementById('editDescription');
+    const editImage = document.getElementById('editImage');
+    const editImagePreview = document.getElementById('editImagePreview');
+    const editPreview = document.getElementById('editPreview');
+    const editVariantsWrap = document.getElementById('editVariantsWrap');
+    const editAddVariant = document.getElementById('editAddVariant');
+
+    let editSelectedFiles = [];
+
+    editImage.addEventListener('change', () => {
+      const files = Array.from(editImage.files||[]);
+      if (files.length){
+        try { editImagePreview.src = URL.createObjectURL(files[0]); } catch {}
+      } else {
+        editImagePreview.src = editingCurrentImageUrl || '';
+      }
+      editSelectedFiles = files;
+      renderEditPreview();
+    });
+
+    function renderEditPreview(){
+      editPreview.innerHTML = '';
+      editSelectedFiles.forEach((file, idx) => {
+        const url = URL.createObjectURL(file);
+        const card = document.createElement('div');
+        card.className = 'border rounded p-2 w-28 text-center';
+        card.innerHTML = `
+          <img src="${url}" class="w-24 h-24 object-cover rounded mb-1" alt="preview">
+          <div class="flex flex-col gap-1">
+            <button data-act="primary" data-idx="${idx}" class="text-xs bg-yellow-500 hover:bg-yellow-600 text-white px-2 py-1 rounded">Set Primary</button>
+            <button data-act="remove" data-idx="${idx}" class="text-xs bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded">Remove</button>
+          </div>
+        `;
+        editPreview.appendChild(card);
+      });
+      if (editSelectedFiles.length){
+        const first = editPreview.querySelector('div');
+        if (first) first.classList.add('ring-2','ring-yellow-400');
+      }
+    }
+
+    editPreview.addEventListener('click', (e) => {
+      const btn = e.target.closest('button[data-act]');
+      if (!btn) return;
+      const idx = Number(btn.getAttribute('data-idx'));
+      const act = btn.getAttribute('data-act');
+      if (act === 'remove'){
+        editSelectedFiles.splice(idx,1);
+      } else if (act === 'primary'){
+        const [f] = editSelectedFiles.splice(idx,1);
+        editSelectedFiles.unshift(f);
+      }
+      const dt = new DataTransfer();
+      editSelectedFiles.forEach(f => dt.items.add(f));
+      editImage.files = dt.files;
+      renderEditPreview();
+    });
+    const editStatus = document.getElementById('editStatus');
+    const saveBtn = document.getElementById('saveBtn');
+
+    let latestProducts = [];
+    let editingProductId = null;
+    let editingCurrentImageUrl = null;
+    let editingVariants = [];
+
+    function showLoading(text = 'Loading...') {
+      if (loadingText) loadingText.textContent = text;
+      if (loadingOverlay) { loadingOverlay.classList.remove('hidden'); loadingOverlay.classList.add('flex'); }
+    }
+    function hideLoading() {
+      if (loadingOverlay) { loadingOverlay.classList.add('hidden'); loadingOverlay.classList.remove('flex'); }
+    }
+
+    async function fetchCategories() {
+      let categories = (window.MAIN_CATEGORIES && Array.isArray(window.MAIN_CATEGORIES)) ? window.MAIN_CATEGORIES : [];
+      if (!categories.length) {
+        const { data, error } = await client.from('Products').select('main_category');
+        if (!error && data) categories = Array.from(new Set((data||[]).map(r => r.main_category).filter(Boolean)));
+      }
+      categorySelect.innerHTML = '<option value="">All Categories</option>' + categories.map(c => `<option value="${c}">${c}</option>`).join('');
+      editCategory.innerHTML = '<option value="">-- Select Main Category --</option>' + categories.map(c => `<option value="${c}">${c}</option>`).join('');
+    }
+
+    async function fetchSubcategories(category) {
+      if (!category) { subcategorySelect.innerHTML = '<option value="">All Subcategories</option>'; subcategorySelect.disabled = true; return; }
+      if (window.getSubcategories) {
+        const subs = window.getSubcategories(category) || [];
+        subcategorySelect.innerHTML = '<option value="">All Subcategories</option>' + subs.map(s => `<option value="${s}">${s}</option>`).join('');
+        subcategorySelect.disabled = false;
+        return;
+      }
+      const { data, error } = await client.from('Products').select('subcategory').eq('main_category', category).order('subcategory', { ascending: true });
+      if (error) { subcategorySelect.innerHTML = '<option value="">All Subcategories</option>'; subcategorySelect.disabled = true; return; }
+      const subs = Array.from(new Set((data || []).map(r => r.subcategory).filter(Boolean)));
+      subcategorySelect.innerHTML = '<option value="">All Subcategories</option>' + subs.map(s => `<option value="${s}">${s}</option>`).join('');
+      subcategorySelect.disabled = false;
+    }
+
+    async function fetchProducts(searchTerm = '', category = '', subcategory = '') {
+      // Fetch minimal columns first to reduce payload and render fast
+      showLoading('Loading products...');
+      statusText.textContent = 'Loading products...';
+      let query = client.from('Products').select('id,title,price,original_price,image_url,main_category,category,subcategory,brand').order('id', { ascending: false });
+      if (searchTerm) query = query.ilike('title', `%${searchTerm}%`);
+      if (category) query = query.eq('main_category', category);
+      if (subcategory) query = query.eq('subcategory', subcategory);
+      const { data, error } = await query;
+      if (error) { statusText.textContent = '❌ Error: ' + error.message; hideLoading(); return; }
+      latestProducts = (data||[]).map(p => ({ ...p, main_category: p.main_category || p.category }));
+      renderProducts(latestProducts);
+      statusText.textContent = `✅ Loaded ${latestProducts.length} product${latestProducts.length === 1 ? '' : 's'}.`;
+      hideLoading();
+    }
+
+    function renderProducts(products) {
+      productsGrid.innerHTML = '';
+      if (!products || products.length === 0) { productsGrid.innerHTML = '<p class="text-gray-500 col-span-full">No products found.</p>'; return; }
+      products.forEach(product => {
+        const card = document.createElement('div');
+        card.className = 'bg-white border rounded shadow p-4 flex flex-col';
+        card.innerHTML = `
+          <img src="${product.image_url}" alt="${product.title}" class="h-40 w-full object-cover rounded mb-4">
+          <h3 class="text-lg font-semibold">${product.title}</h3>
+          <p class="text-gray-600">Ksh ${product.price} <span class="line-through text-sm">${product.original_price ? 'Ksh ' + product.original_price : ''}</span></p>
+          <p class="text-sm text-gray-500 mt-1">${product.main_category || product.category || ''} ${product.subcategory ? ' - ' + product.subcategory : ''} ${product.brand ? ' • ' + product.brand : ''}</p>
+          <div class="mt-4 flex gap-2">
+            <button class="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-2 rounded" data-action="edit" data-id="${String(product.id)}">Edit</button>
+            <button class="flex-1 bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded" data-action="delete" data-id="${String(product.id)}">Delete</button>
+          </div>
+        `;
+        productsGrid.appendChild(card);
+      });
+    }
+
+    function productImagesExisting(id){
+      try {
+        const p = latestProducts.find(pp => String(pp.id) === String(id));
+        if (!p) return [];
+        if (Array.isArray(p.images)) return p.images;
+        if (typeof p.images === 'string') return JSON.parse(p.images);
+        return [];
+      } catch { return []; }
+    }
+
+    function renderEditVariants(){
+      editVariantsWrap.innerHTML = '';
+      editingVariants.forEach((v, idx) => {
+        const row = document.createElement('div');
+        row.className = 'grid grid-cols-12 gap-2';
+        row.innerHTML = `
+          <input class="col-span-6 px-2 py-2 border rounded" placeholder="Size" value="${v.size||''}" data-field="size" data-idx="${idx}">
+          <input type="number" class="col-span-5 px-2 py-2 border rounded" placeholder="Price (Ksh)" value="${v.price||''}" data-field="price" data-idx="${idx}">
+          <button type="button" class="col-span-1 bg-red-600 text-white rounded" data-act="rm" data-idx="${idx}">×</button>
+        `;
+        editVariantsWrap.appendChild(row);
+      });
+    }
+
+    editAddVariant.addEventListener('click', () => { editingVariants.push({ size: '', price: '' }); renderEditVariants(); });
+    editVariantsWrap.addEventListener('input', (e) => {
+      const idx = e.target.getAttribute('data-idx');
+      const field = e.target.getAttribute('data-field');
+      if (idx == null || !field) return;
+      if (field === 'price') editingVariants[idx][field] = e.target.value ? Number(e.target.value) : '';
+      else editingVariants[idx][field] = e.target.value;
+    });
+    editVariantsWrap.addEventListener('click', (e) => {
+      const btn = e.target.closest('button[data-act="rm"]');
+      if (!btn) return;
+      const idx = Number(btn.getAttribute('data-idx'));
+      editingVariants.splice(idx,1);
+      renderEditVariants();
+    });
+
+    function openEditModal() {
+      editStatus.textContent = '';
+      editStatus.className = 'mt-2 text-sm';
+      editModal.classList.remove('hidden');
+      editModal.classList.add('flex');
+    }
+    function closeEditModal() {
+      editModal.classList.add('hidden');
+      editModal.classList.remove('flex');
+      editingProductId = null;
+      editingCurrentImageUrl = null;
+      editForm.reset();
+      editImagePreview.src = '';
+    }
+
+    window.editProduct = function(id) {
+      const product = latestProducts.find(p => String(p.id) === String(id));
+      if (!product) return;
+      editingProductId = id;
+      editingCurrentImageUrl = product.image_url || null;
+      editTitle.value = product.title || '';
+      editPrice.value = product.price ?? '';
+      editOriginalPrice.value = product.original_price ?? '';
+      editCategory.value = product.main_category || product.category || '';
+      if (window.getSubcategories){
+        const subs = window.getSubcategories(editCategory.value) || [];
+        editSubcategory.innerHTML = '<option value="">-- Select Subcategory --</option>' + subs.map(s => `<option value="${s}">${s}</option>`).join('');
+      } else { editSubcategory.innerHTML = `<option value="${product.subcategory||''}">${product.subcategory||''}</option>`; }
+      editSubcategory.value = product.subcategory || '';
+      editBrand.value = product.brand || '';
+      editDescription.value = product.description || product.subcategory || '';
+      editImage.value = '';
+      editImagePreview.src = editingCurrentImageUrl || '';
+      try {
+        const v = product.variants;
+        if (Array.isArray(v)) editingVariants = v.map(x => ({ size: String(x.size||'').trim(), price: Number(x.price)||'' }));
+        else if (typeof v === 'string' && v.trim()) editingVariants = JSON.parse(v);
+        else editingVariants = [];
+      } catch { editingVariants = []; }
+      renderEditVariants();
+      openEditModal();
+    }
+
+    window.deleteProduct = async function(id) {
+      if (!confirm('Are you sure you want to delete this product?')) return;
+      const idFilter = (/^\d+$/.test(String(id))) ? Number(id) : String(id);
+      const { error } = await client.from('Products').delete().eq('id', idFilter);
+      if (error) { alert('❌ Delete failed: ' + error.message); }
+      else { alert('✅ Product deleted!'); await fetchProducts(searchInput.value.trim(), categorySelect.value, subcategorySelect.value); }
+    }
+
+    editForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!editingProductId) return;
+      saveBtn.disabled = true;
+      showLoading('Saving product...');
+      editStatus.textContent = 'Saving...';
+      editStatus.className = 'mt-2 text-sm text-gray-600';
+
+      let imageUrl = editingCurrentImageUrl;
+      const files = Array.from(editImage.files || []);
+      if (files.length > 0) {
+        function slugify(s){ return (s||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,''); }
+        const folder = `products/${slugify(editTitle.value)||'product'}-${Date.now()}`;
+        const uploadedUrls = [];
+        for (let i=0; i<files.length; i++){
+          const f = files[i];
+          const ext = (f.name.split('.').pop()||'jpg').toLowerCase();
+          const name = `${i+1}-${Date.now()}.${ext}`;
+          const path = `${folder}/${name}`;
+          const { error: upErr } = await client.storage.from('product-images').upload(path, f);
+          if (upErr) {
+            editStatus.textContent = '❌ Image upload failed: ' + upErr.message;
+            editStatus.className = 'mt-2 text-sm text-red-600';
+            hideLoading();
+            saveBtn.disabled = false;
+            return;
+          }
+          uploadedUrls.push(`${supabaseUrl}/storage/v1/object/public/product-images/${path}`);
+        }
+        imageUrl = uploadedUrls[0] || editingCurrentImageUrl;
+        updates.images = (productImagesExisting(editingProductId) || []).concat(uploadedUrls);
+      }
+
+      const cleanVariants = editingVariants
+        .map(v => ({ size: String(v.size||'').trim(), price: Number(v.price) }))
+        .filter(v => v.size && !Number.isNaN(v.price) && v.price > 0);
+
+      const updates = {
+        title: editTitle.value.trim(),
+        price: editPrice.value ? Number(editPrice.value) : null,
+        original_price: editOriginalPrice.value ? Number(editOriginalPrice.value) : null,
+        category: editCategory.value.trim() || null,
+        main_category: editCategory.value.trim() || null,
+        subcategory: editSubcategory.value.trim() || null,
+        brand: editBrand.value.trim() || null,
+        description: editDescription.value.trim() || null,
+        image_url: imageUrl || null,
+        variants: cleanVariants.length ? cleanVariants : null,
+      };
+
+      const idFilter = (/^\d+$/.test(String(editingProductId))) ? Number(editingProductId) : String(editingProductId);
+      const { error } = await client.from('Products').update(updates).eq('id', idFilter);
+      if (error) {
+        editStatus.textContent = '❌ ' + error.message;
+        editStatus.className = 'mt-2 text-sm text-red-600';
+      } else {
+        editStatus.textContent = '✅ Saved';
+        editStatus.className = 'mt-2 text-sm text-green-600';
+        await fetchProducts(searchInput.value.trim(), categorySelect.value, subcategorySelect.value);
+        setTimeout(closeEditModal, 500);
+      }
+      hideLoading();
+      saveBtn.disabled = false;
+    });
+
+    closeEditModalBtn.addEventListener('click', closeEditModal);
+    cancelEditBtn.addEventListener('click', closeEditModal);
+
+    productsGrid.addEventListener('click', (e) => {
+      const btn = e.target.closest('button[data-action]');
+      if (!btn) return;
+      const id = btn.getAttribute('data-id');
+      const action = btn.getAttribute('data-action');
+      if (action === 'edit') window.editProduct(id);
+      else if (action === 'delete') window.deleteProduct(id);
+    });
+
+    searchBtn.addEventListener('click', () => {
+      const term = searchInput.value.trim();
+      fetchProducts(term, categorySelect.value, subcategorySelect.value);
+    });
+
+    resetBtn.addEventListener('click', () => {
+      searchInput.value = '';
+      categorySelect.value = '';
+      subcategorySelect.value = '';
+      subcategorySelect.disabled = true;
+      fetchProducts();
+    });
+
+    categorySelect.addEventListener('change', async () => {
+      const category = categorySelect.value;
+      await fetchSubcategories(category);
+      subcategorySelect.value = '';
+      const term = searchInput.value.trim();
+      fetchProducts(term, category, '');
+    });
+
+    subcategorySelect.addEventListener('change', () => {
+      const term = searchInput.value.trim();
+      fetchProducts(term, categorySelect.value, subcategorySelect.value);
+    });
+
+    logoutBtn.addEventListener('click', async () => { await client.auth.signOut(); });
+
+    (async function init() {
+      const ok = await ensureAuth();
+      if (!ok) return;
+      await fetchCategories();
+      await fetchProducts();
+    })();
+  </script>
+<script src="js/theme.js"></script>
+</body>
+</html>

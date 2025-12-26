@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+
+# Product feed and sitemap for Google Merchant Center and search engines
+Sitemap: https://sharkimtraders.co.ke/sitemap.xml
+Sitemap: https://sharkimtraders.co.ke/merchant-feed.xml
+
+# Allow feed crawling
+Allow: /merchant-feed.xml

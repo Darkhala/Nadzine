@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/png" href="/images/icon logo.png">
+  <title>Admin Login</title>
+  <script src="https://unpkg.com/@supabase/supabase-js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+   <style>
+    body {
+      font-family: "Times New Roman", Times, serif, Arial, Helvetica, sans-serif;
+    }
+  </style>
+</head>
+<body class="flex items-center justify-center min-h-screen bg-white">
+  <div class="w-full max-w-md p-8 bg-white rounded-2xl shadow-lg border border-gray-200">
+    <h2 class="text-3xl font-bold mb-6 text-center text-black">
+      Admin <span class="text-yellow-600">Login</span>
+    </h2>
+
+    <form id="login-form" class="space-y-5">
+      <div>
+        <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+        <input 
+          type="email" 
+          id="email" 
+          placeholder="admin@example.com" 
+          class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm"
+          required
+        />
+      </div>
+
+      <div>
+        <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+        <input 
+          type="password" 
+          id="password" 
+          placeholder="••••••••" 
+          class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm"
+          required
+        />
+      </div>
+
+      <button 
+        type="submit"
+        class="w-full py-2 px-4 bg-black text-white font-semibold rounded-lg shadow-md hover:bg-yellow-600 transition duration-300"
+      >
+        Sign In
+      </button>
+    </form>
+
+    <p id="status" class="mt-4 text-center text-sm text-gray-600"></p>
+  </div>
+
+  <script>
+    // ✅ Supabase Config
+    const supabaseUrl = 'https://hhbhkzfoemfowxftgktb.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhoYmhremZvZW1mb3d4ZnRna3RiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY2NTMyNzQsImV4cCI6MjA4MjIyOTI3NH0.6DeVz_OR0l6FECAqG7x52fU-nCaFazcklUU6jfg5-RE';
+    const client = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+    const form = document.getElementById("login-form");
+    const statusText = document.getElementById("status");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+
+      try {
+        const { data, error } = await client.auth.signInWithPassword({
+          email: email,
+          password: password,
+        });
+
+        if (error) {
+          statusText.textContent = "❌ " + error.message;
+          statusText.classList.add("text-red-500");
+        } else {
+          // ✅ Restrict to only your admin email
+          if (data.user.email !== "halahalahamish@gmail.com") {
+            statusText.textContent = "⚠️ This page is authorized for admins only.";
+            statusText.classList.add("text-red-500");
+            await client.auth.signOut(); // force logout if not admin
+            return;
+          }
+
+          statusText.textContent = "✅ Welcome Admin!";
+          statusText.classList.add("text-green-600");
+
+          // Redirect to admin page
+          setTimeout(() => {
+            window.location.href = "Admindashboard.html";
+          }, 1000);
+        }
+      } catch (err) {
+        statusText.textContent = "⚠️ " + err.message;
+        statusText.classList.add("text-red-500");
+      }
+    });
+  </script>
+<script src="js/theme.js"></script>
+</body>
+</html>

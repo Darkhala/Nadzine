@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/png" href="/images/icon logo.png">
+  <title>Upload Product - Sharkim Traders</title>
+
+  <!-- TailwindCSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/@supabase/supabase-js"></script>
+  <style>
+    body { font-family: "Times New Roman", Times, serif, Arial, Helvetica, sans-serif; }
+  </style>
+</head>
+<body class="bg-gray-100 p-6">
+  <div class="max-w-3xl mx-auto bg-white p-6 rounded shadow">
+    <h2 class="text-2xl font-bold mb-6">Upload Product</h2>
+
+    <form id="uploadForm" class="space-y-4">
+      <!-- Product Title -->
+      <input type="text" id="title" placeholder="Product Title" class="w-full px-4 py-2 border rounded" required>
+
+      <!-- Prices -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <input type="number" id="price" placeholder="New Price (Ksh)" class="w-full px-4 py-2 border rounded" required>
+        <input type="number" id="originalPrice" placeholder="Original Price (Ksh)" class="w-full px-4 py-2 border rounded" required>
+      </div>
+
+      <!-- Category selectors -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Main Category</label>
+          <select id="mainCategory" class="w-full px-4 py-2 border rounded" required></select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Subcategory</label>
+          <select id="subcategory" class="w-full px-4 py-2 border rounded" required disabled></select>
+        </div>
+      </div>
+
+      <!-- Brand -->
+      <input type="text" id="brand" placeholder="Brand (e.g., Samsung, HP)" class="w-full px-4 py-2 border rounded">
+
+      <!-- Description -->
+      <textarea id="description" placeholder="Product Description" class="w-full px-4 py-2 border rounded h-28"></textarea>
+
+      <!-- Key Features -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Key Features (one per line)</label>
+        <textarea id="features" placeholder="e.g.\nFast delivery\n12-month warranty\nEnergy saving" class="w-full px-4 py-2 border rounded h-28"></textarea>
+      </div>
+
+      <!-- Size/Price Variants -->
+      <div class="border rounded p-3">
+        <div class="flex items-center justify-between mb-2">
+          <label class="block text-sm font-medium text-gray-700">Size/Price Variants</label>
+          <button type="button" id="addVariant" class="text-xs bg-gray-800 text-white px-2 py-1 rounded">Add Variant</button>
+        </div>
+        <div id="variantsWrap" class="space-y-2">
+          <!-- rows injected here: size (string) + price (number) -->
+        </div>
+        <p class="text-xs text-gray-500 mt-1">Example size values: 8 by 8, 3x6, UK46, Large, 500W, etc.</p>
+      </div>
+
+      <!-- Images Upload -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Product Images (you can select multiple)</label>
+        <input type="file" id="images" accept="image/*" multiple class="w-full px-4 py-2 border rounded" required>
+        <div id="imagePreview" class="mt-3 flex flex-wrap gap-3"></div>
+        <p class="text-xs text-gray-500 mt-1">Click "Set Primary" to choose the main image. You can also remove a selected image before upload.</p>
+      </div>
+
+      <!-- Submit Button -->
+      <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded">Upload</button>
+    </form>
+
+    <p id="status" class="mt-4 text-sm text-gray-700"></p>
+  </div>
+
+  <script src="js/categories.js"></script>
+  <script>
+    window.onload = () => {
+      const supabaseUrl = "https://hhbhkzfoemfowxftgktb.supabase.co";
+      const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhoYmhremZvZW1mb3d4ZnRna3RiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY2NTMyNzQsImV4cCI6MjA4MjIyOTI3NH0.6DeVz_OR0l6FECAqG7x52fU-nCaFazcklUU6jfg5-RE"; 
+      const client = window.supabase.createClient(supabaseUrl, supabaseKey);
+      const ADMIN_EMAIL = 'halahalahamish@gmail.com';
+
+    // Auth guard
+    async function ensureAuth() {
+      try {
+        const { data: { session } } = await client.auth.getSession();
+        if (!session) { window.location.href = 'login.html'; return false; }
+        const userEmail = session.user?.email || '';
+        document.getElementById('userEmail').textContent = userEmail;
+        if (userEmail.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
+          await client.auth.signOut();
+          window.location.href = 'login.html';
+          return false;
+        }
+        client.auth.onAuthStateChange((event) => { if (event === 'SIGNED_OUT') window.location.href = 'login.html'; });
+        return true;
+      } catch { window.location.href = 'login.html'; return false; }
+    }
+
+      const statusText = document.getElementById('status');
+      const mainCategory = document.getElementById('mainCategory');
+      const subcategory = document.getElementById('subcategory');
+      const description = document.getElementById('description');
+      const features = document.getElementById('features');
+      const brand = document.getElementById('brand');
+      const imagesInput = document.getElementById('images');
+      const imagePreview = document.getElementById('imagePreview');
+      let selectedFiles = [];
+      let variants = [];
+
+      imagesInput.addEventListener('change', () => {
+        selectedFiles = Array.from(imagesInput.files||[]);
+        renderPreview();
+      });
+
+      function renderPreview(){
+        imagePreview.innerHTML = '';
+        selectedFiles.forEach((file, idx) => {
+          const url = URL.createObjectURL(file);
+          const card = document.createElement('div');
+          card.className = 'border rounded p-2 w-28 text-center';
+          card.innerHTML = `
+            <img src="${url}" class="w-24 h-24 object-cover rounded mb-1" alt="preview">
+            <div class="flex flex-col gap-1">
+              <button data-act="primary" data-idx="${idx}" class="text-xs bg-yellow-500 hover:bg-yellow-600 text-white px-2 py-1 rounded">Set Primary</button>
+              <button data-act="remove" data-idx="${idx}" class="text-xs bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded">Remove</button>
+            </div>
+          `;
+          imagePreview.appendChild(card);
+        });
+        if (selectedFiles.length){
+          // ensure first is primary visually
+          const first = imagePreview.querySelector('div');
+          if (first) first.classList.add('ring-2','ring-yellow-400');
+        }
+      }
+
+      imagePreview.addEventListener('click', (e) => {
+        const btn = e.target.closest('button[data-act]');
+        if (!btn) return;
+        const idx = Number(btn.getAttribute('data-idx'));
+        const act = btn.getAttribute('data-act');
+        if (act === 'remove'){
+          selectedFiles.splice(idx,1);
+        } else if (act === 'primary'){
+          const [f] = selectedFiles.splice(idx,1);
+          selectedFiles.unshift(f);
+        }
+        // rebuild FileList for input (optional)
+        const dt = new DataTransfer();
+        selectedFiles.forEach(f => dt.items.add(f));
+        imagesInput.files = dt.files;
+        renderPreview();
+      });
+
+      // Variant UI logic
+      const variantsWrap = document.getElementById('variantsWrap');
+      const addVariantBtn = document.getElementById('addVariant');
+      function renderVariants(){
+        variantsWrap.innerHTML = '';
+        variants.forEach((v, idx) => {
+          const row = document.createElement('div');
+          row.className = 'grid grid-cols-12 gap-2';
+          row.innerHTML = `
+            <input class="col-span-6 px-2 py-2 border rounded" placeholder="Size (e.g., 8 by 8, UK46)" value="${v.size||''}" data-field="size" data-idx="${idx}">
+            <input type="number" class="col-span-5 px-2 py-2 border rounded" placeholder="Price (Ksh)" value="${v.price||''}" data-field="price" data-idx="${idx}">
+            <button type="button" class="col-span-1 bg-red-600 text-white rounded" data-act="rm" data-idx="${idx}">×</button>
+          `;
+          variantsWrap.appendChild(row);
+        });
+      }
+      addVariantBtn.addEventListener('click', () => { variants.push({ size: '', price: '' }); renderVariants(); });
+      variantsWrap.addEventListener('input', (e) => {
+        const idx = e.target.getAttribute('data-idx');
+        const field = e.target.getAttribute('data-field');
+        if (idx == null || !field) return;
+        if (field === 'price') variants[idx][field] = e.target.value ? Number(e.target.value) : '';
+        else variants[idx][field] = e.target.value;
+      });
+      variantsWrap.addEventListener('click', (e) => {
+        const btn = e.target.closest('button[data-act="rm"]');
+        if (!btn) return;
+        const idx = Number(btn.getAttribute('data-idx'));
+        variants.splice(idx,1);
+        renderVariants();
+      });
+
+      // Auth guard
+      client.auth.getUser().then(({ data: { user } }) => { if (!user) window.location.href = "login.html"; });
+
+      // Populate categories
+      function populateMain(selected=''){
+        mainCategory.innerHTML = '<option value="">-- Select Main Category --</option>' + MAIN_CATEGORIES.map(c => `<option ${selected===c?'selected':''} value="${c}">${c}</option>`).join('');
+      }
+      function populateSub(main, selected=''){
+        const subs = main ? getSubcategories(main) : [];
+        if (!subs.length){ subcategory.innerHTML = '<option value="">-- Select Subcategory --</option>'; subcategory.disabled = true; return; }
+        subcategory.innerHTML = '<option value="">-- Select Subcategory --</option>' + subs.map(s => `<option ${selected===s?'selected':''} value="${s}">${s}</option>`).join('');
+        subcategory.disabled = false;
+      }
+      populateMain('');
+      mainCategory.addEventListener('change', () => populateSub(mainCategory.value, ''));
+
+      // Submit
+      document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        statusText.textContent = 'Uploading...';
+
+        const title = document.getElementById('title').value.trim();
+        const price = parseFloat(document.getElementById('price').value);
+        const originalPrice = parseFloat(document.getElementById('originalPrice').value);
+        const mainCat = mainCategory.value;
+        const subCat = subcategory.value;
+        const desc = description.value.trim();
+        const featuresRaw = (features.value||'').trim();
+        const brandVal = brand.value.trim();
+        const files = Array.from(document.getElementById('images').files);
+        // Clean variants: keep rows with both size and price
+        const cleanVariants = variants
+          .map(v => ({ size: String(v.size||'').trim(), price: Number(v.price) }))
+          .filter(v => v.size && !Number.isNaN(v.price) && v.price > 0);
+        if (!files.length) { statusText.textContent = '❌ No images selected.'; return; }
+
+        // Compose description with features block to be parsed on product page
+        let descWithFeatures = desc;
+        if (featuresRaw) {
+          const lines = featuresRaw.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+          if (lines.length){
+            descWithFeatures += (descWithFeatures ? '\n\n' : '') + '[FEATURES]\n' + lines.join('\n') + '\n[/FEATURES]';
+          }
+        }
+
+        // Create a folder for this product's images
+        function slugify(s){ return (s||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,''); }
+        const folder = `products/${slugify(title)||'product'}-${Date.now()}`;
+
+        try {
+          const uploadedUrls = [];
+          const filesOrdered = selectedFiles.length ? selectedFiles : files;
+          for (let i=0; i<filesOrdered.length; i++){
+            const f = filesOrdered[i];
+            const ext = (f.name.split('.').pop()||'jpg').toLowerCase();
+            const name = `${i+1}-${Date.now()}.${ext}`;
+            const path = `${folder}/${name}`;
+            const { error: upErr } = await client.storage.from('product-images').upload(path, f);
+            if (upErr) { statusText.textContent = `❌ Upload failed: ${upErr.message}`; return; }
+            uploadedUrls.push(`${supabaseUrl}/storage/v1/object/public/product-images/${path}`);
+          }
+
+          const mainImageUrl = uploadedUrls[0];
+          const { error: insertError } = await client.from('Products').insert([{
+            title,
+            price,
+            original_price: originalPrice,
+            image_url: mainImageUrl,
+            images: uploadedUrls, // store all image URLs if column exists
+            variants: cleanVariants.length ? cleanVariants : null,
+            // legacy field for backward compatibility
+            category: mainCat,
+            main_category: mainCat,
+            subcategory: subCat,
+            brand: brandVal || null,
+            description: descWithFeatures || null
+          }]);
+
+          if (insertError) { statusText.textContent = '❌ Database error: ' + insertError.message; }
+          else { statusText.textContent = '✅ Product uploaded successfully!'; document.getElementById('uploadForm').reset(); subcategory.disabled = true; }
+        } catch (err) {
+          statusText.textContent = '❌ Unexpected error: ' + err.message;
+        }
+        statusText.scrollIntoView({ behavior: 'smooth' });
+      });
+    };
+  </script>
+<script src="js/theme.js"></script>
+</body>
+</html>

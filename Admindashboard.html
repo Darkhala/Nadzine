@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/png" href="/images/icon logo.png">
+  <title>Admin Dashboard - Sharkim Traders</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/@supabase/supabase-js"></script>
+   <style>
+    body {
+      font-family: "Times New Roman", Times, serif, Arial, Helvetica, sans-serif;
+    }
+  </style>
+</head>
+<body class="bg-white min-h-screen text-black flex flex-col">
+
+  <!-- HEADER -->
+  <header class="bg-black text-white px-6 py-4 flex justify-between items-center shadow-md">
+    <h1 class="text-2xl font-bold text-gold">Nadzine Emporium</h1>
+    <button id="logoutBtn" 
+      class="bg-gold text-black px-4 py-2 rounded font-semibold hover:bg-white hover:text-black border border-gold transition">
+      Logout
+    </button>
+  </header>
+
+  <!-- MAIN CONTENT -->
+  <main class="flex-1 flex items-center justify-center p-6">
+    <div class="bg-white shadow-xl rounded-2xl p-10 w-full max-w-lg text-center border border-gray-100">
+      <h2 class="text-2xl font-bold mb-6 text-black">Welcome, Admin</h2>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Upload Products -->
+        <a href="upload.html" 
+          class="flex flex-col items-center justify-center bg-gold text-black p-6 rounded-xl font-bold shadow hover:bg-black hover:text-gold transition">
+          <span class="text-3xl">⬆️</span>
+          <span class="mt-2">Upload Products</span>
+        </a>
+
+        <!-- Manage Products -->
+        <a href="manage.html" 
+          class="flex flex-col items-center justify-center bg-gold text-black p-6 rounded-xl font-bold shadow hover:bg-black hover:text-gold transition">
+          <span class="text-3xl">🛠</span>
+          <span class="mt-2">Manage Products</span>
+        </a>
+      </div>
+    </div>
+  </main>
+
+<script>
+  const supabaseUrl = 'https://hhbhkzfoemfowxftgktb.supabase.co';
+  const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhoYmhremZvZW1mb3d4ZnRna3RiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY2NTMyNzQsImV4cCI6MjA4MjIyOTI3NH0.6DeVz_OR0l6FECAqG7x52fU-nCaFazcklUU6jfg5-RE';
+  const client = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+  // ✅ Check if user is logged in (else redirect)
+  client.auth.getUser().then(({ data: { user } }) => {
+    if (!user) {
+      window.location.href = "login.html";
+    }
+  });
+
+  // ✅ Logout
+  document.getElementById("logoutBtn").addEventListener("click", async () => {
+    await client.auth.signOut();
+    window.location.href = "login.html";
+  });
+</script>
+
+<style>
+  /* Custom gold color */
+  .text-gold { color: #D4AF37; }
+  .bg-gold { background-color: #D4AF37; }
+  .border-gold { border-color: #D4AF37; }
+</style>
+<script src="js/theme.js"></script>
+</body>
+</html>

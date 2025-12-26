@@ -1,0 +1,21 @@
+{
+  "title": "Sharkim Traders Product Feed",
+  "link": "https://sharkimtraders.co.ke/",
+  "updated": "2025-01-01T00:00:00Z",
+  "entries": [
+    {
+      "id": "SAMPLE-1",
+      "title": "Sample Product",
+      "description": "Replace with real products via scheduled feed.",
+      "link": "https://sharkimtraders.co.ke/product.html?id=1",
+      "image_link": "https://sharkimtraders.co.ke/images/sharkim_gold_logo.png",
+      "price": "1000.00 KES",
+      "availability": "in stock",
+      "condition": "new",
+      "brand": "Sharkim Traders",
+      "google_product_category": "Electronics",
+      "shipping": [{ "country": "KE", "price": "0.00 KES" }]
+    }
+  ],
+  "_note": "This is a placeholder static JSON feed. For real products, set up a Scheduled fetch in Merchant Center to this URL and update this file using a script that pulls from Supabase."
+}
