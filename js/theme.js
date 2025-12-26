@@ -1,11 +1,11 @@
-/* Global Theme and Hover Zoom Script for Sharkim Traders */
+/* Global Theme and Hover Zoom Script for Nadzine Emporium */
 (function(){
-  const STORAGE_KEY = 'sharkim:theme';
+  const STORAGE_KEY = 'nadzine:theme';
   const root = document.documentElement;
 
   // Inject global styles (theme + toggle + hover zoom)
   const style = document.createElement('style');
-  style.setAttribute('data-sharkim-theme', '');
+  style.setAttribute('data-nadzine-theme', '');
   style.textContent = `
     :root {
       --bg: #f3f4f6;           /* light background */
@@ -116,7 +116,7 @@
   }
 
   function initTheme(){
-    let preferred = 'light'; // Light mode is the primary default
+    let preferred = 'dark'; // Dark mode is the primary default
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved === 'dark' || saved === 'light') preferred = saved;
