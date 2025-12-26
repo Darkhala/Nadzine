@@ -63,13 +63,27 @@ function initMainImageZoom(){
     lens.className = 'zoom-lens';
     container.appendChild(lens);
   }
+  // Style lens container
   Object.assign(lens.style, {
     position: 'absolute', pointerEvents: 'none', width: '140px', height: '140px', borderRadius: '9999px',
-    border: '2px solid rgba(255,255,255,0.95)', boxShadow: '0 6px 18px rgba(0,0,0,0.25)', backgroundRepeat: 'no-repeat',
-    backgroundImage: `url(${img.src})`, backgroundSize: '200% 200%', opacity: '0', transition: 'opacity .15s ease'
+    border: '2px solid rgba(255,255,255,0.95)', boxShadow: '0 6px 18px rgba(0,0,0,0.25)', opacity: '0', transition: 'opacity .15s ease', overflow: 'hidden'
   });
-  function updateLensBg(){ lens.style.backgroundImage = `url(${img.src})`; }
-  img.removeEventListener('load', updateLensBg); img.addEventListener('load', updateLensBg);
+  // Ensure an <img> is used inside the lens instead of CSS background-image
+  let lensImg = lens.querySelector('img');
+  if (!lensImg){
+    lensImg = document.createElement('img');
+    lensImg.alt = 'zoom';
+    lensImg.style.position = 'absolute';
+    lensImg.style.width = '200%';
+    lensImg.style.height = '200%';
+    lensImg.style.top = '0';
+    lensImg.style.left = '0';
+    lensImg.style.transformOrigin = 'top left';
+    lens.appendChild(lensImg);
+  }
+  function updateLensImg(){ lensImg.src = img.src; }
+  updateLensImg();
+  img.removeEventListener('load', updateLensImg); img.addEventListener('load', updateLensImg);
   function move(e){
     const rect = container.getBoundingClientRect();
     const src = e.touches ? e.touches[0] : e;
@@ -77,9 +91,10 @@ function initMainImageZoom(){
     const lx = Math.max(0, Math.min(rect.width, x)) - lens.offsetWidth/2;
     const ly = Math.max(0, Math.min(rect.height, y)) - lens.offsetHeight/2;
     lens.style.left = lx + 'px'; lens.style.top = ly + 'px';
-    const px = Math.max(0, Math.min(1, x / rect.width)) * 100;
-    const py = Math.max(0, Math.min(1, y / rect.height)) * 100;
-    lens.style.backgroundPosition = px + '% ' + py + '%';
+    const px = Math.max(0, Math.min(1, x / rect.width));
+    const py = Math.max(0, Math.min(1, y / rect.height));
+    // Translate the inner image to simulate background-position at 200% scale
+    lensImg.style.transform = `translate(${-px*100}%, ${-py*100}%)`;
   }
   function enter(){ lens.style.opacity = '1'; }
   function leave(){ lens.style.opacity = '0'; }

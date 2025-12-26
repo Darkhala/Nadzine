@@ -53,7 +53,7 @@
     /* Advanced follow-cursor zoom + search cursor */
     .zoom-container { position: relative; overflow: hidden; }
     .zoom-container img { display: block; }
-    .zoom-container .zoom-lens { position: absolute; pointer-events: none; width: 120px; height: 120px; border-radius: 9999px; border: 2px solid rgba(255,255,255,.9); box-shadow: 0 2px 8px rgba(0,0,0,.35); background-repeat: no-repeat; background-size: 200% 200%; opacity: 0; transition: opacity .2s ease; }
+    .zoom-container .zoom-lens { position: absolute; pointer-events: none; width: 120px; height: 120px; border-radius: 9999px; border: 2px solid rgba(255,255,255,.9); box-shadow: 0 2px 8px rgba(0,0,0,.35); opacity: 0; transition: opacity .2s ease; overflow: hidden; }
     .zoom-container.zoom-active .zoom-lens { opacity: 1; }
     .zoom-search-cursor { cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>') 4 4, zoom-in; }
 
@@ -178,11 +178,21 @@
           lens.style.left = (x - lens.offsetWidth/2) + 'px';
           lens.style.top  = (y - lens.offsetHeight/2) + 'px';
 
-          // Background image and position
-          const bgX = px * 100;
-          const bgY = py * 100;
-          lens.style.backgroundImage = `url(${img.src})`;
-          lens.style.backgroundPosition = `${bgX}% ${bgY}%`;
+          // Use an <img> inside the lens instead of CSS background-image
+          let lensImg = lens.querySelector('img');
+          if (!lensImg){
+            lensImg = document.createElement('img');
+            lensImg.alt = 'zoom';
+            lensImg.style.position = 'absolute';
+            lensImg.style.width = '200%';
+            lensImg.style.height = '200%';
+            lensImg.style.top = '0';
+            lensImg.style.left = '0';
+            lensImg.style.transformOrigin = 'top left';
+            lens.appendChild(lensImg);
+          }
+          if (lensImg.src !== img.src) lensImg.src = img.src;
+          lensImg.style.transform = `translate(${-px*100}%, ${-py*100}%)`;
         }
         function onEnter(){ wrap.classList.add('zoom-active'); }
         function onLeave(){ wrap.classList.remove('zoom-active'); }
